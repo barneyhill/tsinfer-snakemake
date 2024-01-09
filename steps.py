@@ -20,6 +20,27 @@ def number_to_SI(number):
     return f"{number:.2f}{units[unit]}"
 
 
+def bgen_to_zarrs(input, output, wildcards, config, params):  # noqa: A002
+    import sgkit.io.bgen
+    from pathlib import Path
+    from dask.distributed import Client
+    from dask.distributed import performance_report
+
+    with Client(config["scheduler_address"]), performance_report(filename=output[1]):
+        sgkit.io.bgen.bgen_reader.bgen_to_zarr(
+            input[0],
+            output[0].replace(".vcf_done", ""),
+            target_part_size=params.target_part_size,
+            read_chunk_length=params.read_chunk_length,
+            temp_chunk_length=params.temp_chunk_length,
+            chunk_length=params.chunk_length,
+            chunk_width=params.chunk_width,
+            tempdir=config["temp_dir"],
+            retain_temp_files=params.retain_temp_files,
+        )
+    Path(str(output[0])).touch()
+
+
 def vcf_to_zarrs(input, output, wildcards, config, params):  # noqa: A002
     import sgkit.io.vcf
     from pathlib import Path

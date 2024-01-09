@@ -43,6 +43,27 @@ rule all:
             ],
         ),
 
+rule bgen_to_zarrs:
+    input:
+        bgen=lambda wildcards: config["bgen"].format(chrom=wildcards.chrom_num),
+        sample=config["sample_file"],
+    output:
+        data_dir / "zarr_vcfs" / "chr{chrom_num}" / "data.zarr" / ".vcf_done",
+        data_dir / "zarr_vcfs" / "chr{chrom_num}" / "performance_report.html",
+    resources:
+        mem_mb=16000,
+        time_min=60,
+        runtime=60,
+    params:
+        target_part_size="5M",
+        read_chunk_length=config["bgen_to_zarr"]["read_chunk_length"],
+        temp_chunk_length=config["bgen_to_zarr"]["temp_chunk_length"],
+        chunk_length=config["bgen_to_zarr"]["chunk_length"],
+        chunk_width=config["bgen_to_zarr"]["chunk_width"],
+        retain_temp_files=config["bgen_to_zarr"]["retain_temp_files"],
+    run:
+        steps.bgen_to_zarr(input.bgen, input.sample, output[0], config)
+
 
 rule vcf_to_zarrs:
     input:
